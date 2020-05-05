@@ -13,23 +13,23 @@ def getFileName():
 
 def filterColor(img,color):
     switcher = {
-         "green": (0, 1, 0, 1),
-          "blue": (0, 0, 1, 1),
-           "red": (1, 0, 0, 1),
-          "cyan": (0, 0, 0, 1),
-        "yellow": (0, 0, 0, 1),
-        "magenta":(0, 0, 0, 1)
+        1: (1, 0, 0, 1),    #r
+        2: (0, 1, 0, 1),    #g
+        3: (0, 0, 1, 1),    #b
+        4: (1, 1, 1, 1),    #grey
+        5: (0, 0, 0, 1),    #c
+        6: (0, 0, 0, 1),    #m
+        7: (0, 0, 0, 1)     #y
+        
     }
     coef=switcher.get(color)
     im = np.copy(img) # On fait une copie de l'original
     for i in range(im.shape[0]):
         for j in range(im.shape[1]):
             r, g, b, dt = im[i, j]
-            if(color=="grey"):
-                gris = int(0.299 * r + 0.587 * g + 0.114 * b)
-                im[i,j] = (gris,gris,gris,dt)
-            else:
-                im[i,j]=np.multiply((r,g,b,dt),coef)
+            if(color==4):
+                r=g=b = int(0.299 * r + 0.587 * g + 0.114 * b)
+            im[i,j]=np.multiply((r,g,b,dt),coef)
     return im
 
 """
@@ -135,18 +135,43 @@ if img.dtype == np.float32: # Si le résultat n'est pas un tableau d'entiers
 
 imgpil = Image.open(getFileName())  
 img = np.array(imgpil) # Transformation de l'image en tableau numpy
-    
-fig, axes = plt.subplots(1, 8)
-ax = axes.ravel()
-for i in range(8):
-    ax[i].set_xticklabels([])
-    ax[i].set_yticklabels([])
-ax[0].imshow(img)
-ax[1].imshow(filterColor(img,"red"))
-ax[2].imshow(filterColor(img,"blue"))
-ax[3].imshow(filterColor(img,"green"))
-ax[4].imshow(filterColor(img,"grey"))
-ax[5].imshow(filterColor(img,"cyan"))
-ax[6].imshow(filterColor(img,"magenta"))
-ax[7].imshow(filterColor(img,"yellow"))
-plt.show()
+
+fig = plt.figure("RGB")
+fig.suptitle("Filtre RGB")
+
+ax = fig.add_subplot(2,2,1)
+ax.imshow(img)
+ax.set_xticklabels([])
+ax.set_yticklabels([])
+for i in range(1,4):
+    ax = fig.add_subplot(2,2,i+1)
+    ax.imshow(filterColor(img,i))
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+fig.show()
+
+fig2 = plt.figure("GREY")
+fig2.suptitle("GREY")
+ax2 = fig2.add_subplot(1,2,1)
+ax2.imshow(img)
+ax2.set_xticklabels([])
+ax2.set_yticklabels([])
+ax2 = fig2.add_subplot(1,2,2)
+ax2.imshow(filterColor(img,4))
+ax2.set_xticklabels([])
+ax2.set_yticklabels([])
+fig2.show()
+
+fig3 = plt.figure("CMY")
+fig3.suptitle("Filtre CMY")
+
+ax3 = fig3.add_subplot(2,2,1)
+ax3.imshow(img)
+ax3.set_xticklabels([])
+ax3.set_yticklabels([])
+for i in range(5,8):
+    ax3 = fig3.add_subplot(2,2,i-3)
+    ax3.imshow(filterColor(img,i))
+    ax3.set_xticklabels([])
+    ax3.set_yticklabels([])
+fig3.show()
