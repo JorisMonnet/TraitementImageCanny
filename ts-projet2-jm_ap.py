@@ -31,6 +31,8 @@ def filterColor(img,color):
                 r=g=b = int(0.299 * r + 0.587 * g + 0.114 * b)
             im[i,j]=np.multiply((r,g,b,dt),coef)
     return im
+def fft(img):
+    return np.fft.fft(img)
 
 """
 def gaussian_kernel(size, sigma=1):
@@ -152,6 +154,7 @@ fig.show()
 
 fig2 = plt.figure("GREY")
 fig2.suptitle("GREY")
+
 ax2 = fig2.add_subplot(1,2,1)
 ax2.imshow(img)
 ax2.set_xticklabels([])
@@ -175,3 +178,19 @@ for i in range(5,8):
     ax3.set_xticklabels([])
     ax3.set_yticklabels([])
 fig3.show()
+"""
+fig4 = plt.figure("FFT")
+fig4.suptitle("FFT")
+
+ax4 = fig4.add_subplot(3,1,1)
+ax4.imshow(img)
+ax4.set_xticklabels([])
+ax4.set_yticklabels([])
+B = fft(img)
+ax4 = fig4.add_subplot(3,1,2)
+ax4.plot(np.real(B))
+ax4.ylabel("partie reelle")
+ax4 = fig4.add_subplot(3,1,2)
+ax4.plot(np.imag(B))
+ax4.ylabel("partie imaginaire")
+fig4.show()"""
