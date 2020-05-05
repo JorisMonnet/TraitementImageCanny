@@ -13,12 +13,12 @@ def getFileName():
 
 def filterColor(img,color):
     switcher = {
-        "green":(0, 1, 0, 1),
-        "blue": (0, 0, 1, 1),
-        "red":(1, 0, 0, 1),
-        "cyan":(0, 0, 0, 0),
-        "yellow":(0, 0, 0, 0),
-        "magenta":(0, 0, 0, 0)
+         "green": (0, 1, 0, 1),
+          "blue": (0, 0, 1, 1),
+           "red": (1, 0, 0, 1),
+          "cyan": (0, 0, 0, 1),
+        "yellow": (0, 0, 0, 1),
+        "magenta":(0, 0, 0, 1)
     }
     coef=switcher.get(color)
     im = np.copy(img) # On fait une copie de l'original
@@ -134,14 +134,19 @@ if img.dtype == np.float32: # Si le résultat n'est pas un tableau d'entiers
     img = (img * 255).astype(np.uint8)"""
 
 imgpil = Image.open(getFileName())  
-# anciennement np.asarray
 img = np.array(imgpil) # Transformation de l'image en tableau numpy
     
-fig, axes = plt.subplots(1, 5, figsize=(8, 4))
+fig, axes = plt.subplots(1, 8)
 ax = axes.ravel()
+for i in range(8):
+    ax[i].set_xticklabels([])
+    ax[i].set_yticklabels([])
 ax[0].imshow(img)
 ax[1].imshow(filterColor(img,"red"))
 ax[2].imshow(filterColor(img,"blue"))
 ax[3].imshow(filterColor(img,"green"))
 ax[4].imshow(filterColor(img,"grey"))
+ax[5].imshow(filterColor(img,"cyan"))
+ax[6].imshow(filterColor(img,"magenta"))
+ax[7].imshow(filterColor(img,"yellow"))
 plt.show()

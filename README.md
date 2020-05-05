@@ -6,3 +6,8 @@
 -	Passage de l’image lue de la couleur au noir et blanc (Y=0.299∙R+0.587∙G+0.114∙B) 
 -	Détection de contour selon l’algorithme de Canny (https://fr.wikipedia.org/wiki/Filtre_de_Canny) 
 -	Calcul et illustration de la FFT des images avant et après filtrage 
+
+Aides python 
+- Lecture image : matplotlib.pyplot.imread 
+- Affichage image : matplotlib.pyplot.imshow 
+- Librairie imageio 
