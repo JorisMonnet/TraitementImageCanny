@@ -7,28 +7,29 @@ import numpy as np
 
 def getFileName():
     root = Tk()
-    return filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
+    fileName = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
+    root.destroy()
+    return fileName
 
 def filterColor(img,color):
+    switcher = {
+        "green":(0, 1, 0, 1),
+        "blue": (0, 0, 1, 1),
+        "red":(1, 0, 0, 1),
+        "cyan":(0, 0, 0, 0),
+        "yellow":(0, 0, 0, 0),
+        "magenta":(0, 0, 0, 0)
+    }
+    coef=switcher.get(color)
     im = np.copy(img) # On fait une copie de l'original
     for i in range(im.shape[0]):
         for j in range(im.shape[1]):
             r, g, b, dt = im[i, j]
-            if(color=="green"):
-                im[i, j] = (0, g,0,dt)
-            elif(color=="blue"):
-                im[i, j] = (0, 0,b,dt)
-            elif(color=="red"):
-                im[i, j] = (r, 0,0,dt)
-            elif(color=="grey"):
+            if(color=="grey"):
                 gris = int(0.299 * r + 0.587 * g + 0.114 * b)
                 im[i,j] = (gris,gris,gris,dt)
-            elif(color=="cyan"):
-                im[i, j] = (0, g,b,dt)
-            elif(color=="magenta"):
-                im[i, j] = (r, 0,b,dt)
-            elif(color=="yellow"):
-                im[i, j] = (r, g,0,dt)
+            else:
+                im[i,j]=np.multiply((r,g,b,dt),coef)
     return im
 
 """
@@ -136,10 +137,11 @@ imgpil = Image.open(getFileName())
 # anciennement np.asarray
 img = np.array(imgpil) # Transformation de l'image en tableau numpy
     
-fig, axes = plt.subplots(1, 4, figsize=(8, 4))
+fig, axes = plt.subplots(1, 5, figsize=(8, 4))
 ax = axes.ravel()
 ax[0].imshow(img)
-ax[1].imshow(filterColor(img,"magenta"))
-ax[2].imshow(filterColor(img,"cyan"))
-ax[3].imshow(filterColor(img,"yellow"))
+ax[1].imshow(filterColor(img,"red"))
+ax[2].imshow(filterColor(img,"blue"))
+ax[3].imshow(filterColor(img,"green"))
+ax[4].imshow(filterColor(img,"grey"))
 plt.show()
