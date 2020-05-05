@@ -2,12 +2,35 @@ from tkinter import filedialog
 from tkinter import *
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-
+from PIL import Image
 import numpy as np
 
 def getFileName():
     root = Tk()
     return filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
+
+def filterColor(img,color):
+    im = np.copy(img) # On fait une copie de l'original
+    for i in range(im.shape[0]):
+        for j in range(im.shape[1]):
+            r, g, b, dt = im[i, j]
+            if(color=="green"):
+                im[i, j] = (0, g,0,dt)
+            elif(color=="blue"):
+                im[i, j] = (0, 0,b,dt)
+            elif(color=="red"):
+                im[i, j] = (r, 0,0,dt)
+            elif(color=="grey"):
+                gris = int(0.299 * r + 0.587 * g + 0.114 * b)
+                im[i,j] = (gris,gris,gris,dt)
+            elif(color=="cyan"):
+                im[i, j] = (0, g,b,dt)
+            elif(color=="magenta"):
+                im[i, j] = (r, 0,b,dt)
+            elif(color=="yellow"):
+                im[i, j] = (r, g,0,dt)
+    return im
+
 """
 def gaussian_kernel(size, sigma=1):
     size = int(size) // 2
@@ -105,33 +128,18 @@ def hysteresis(img, weak, strong=255):
                     pass
     return img
 """
-img = mpimg.imread(getFileName())
+"""img = mpimg.imread(getFileName())
 if img.dtype == np.float32: # Si le résultat n'est pas un tableau d'entiers
-    img = (img * 255).astype(np.uint8)
+    img = (img * 255).astype(np.uint8)"""
 
-imgToShow = plt.imshow(img)
-red = img[:,:,2] 
-blue = img[2,:,:]
-plt.imshow(red)
-#plt.imshow(blue)
-
-import matplotlib.pyplot as plt
-
-from skimage import data
-from skimage.color import rgb2gray
-
-original = data.astronaut()
-grayscale = rgb2gray(original)
-
-fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+imgpil = Image.open(getFileName())  
+# anciennement np.asarray
+img = np.array(imgpil) # Transformation de l'image en tableau numpy
+    
+fig, axes = plt.subplots(1, 4, figsize=(8, 4))
 ax = axes.ravel()
-
-ax[0].imshow(original)
-ax[0].set_title("Original")
-ax[1].imshow(grayscale, cmap=plt.cm.gray)
-ax[1].set_title("Grayscale")
-
-fig.tight_layout()
-
-
+ax[0].imshow(img)
+ax[1].imshow(filterColor(img,"magenta"))
+ax[2].imshow(filterColor(img,"cyan"))
+ax[3].imshow(filterColor(img,"yellow"))
 plt.show()
