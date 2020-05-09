@@ -19,8 +19,8 @@ def filterColor(img,color):
         5: (1, 1, 0, 1),    #c
         6: (1, 0, 1, 1),    #m
         7: (0, 1, 1, 1)     #y
-        
     }
+
     coef=switcher.get(color)
     im = np.copy(img) # On fait une copie de l'original
     for i in range(im.shape[0]):
@@ -36,10 +36,17 @@ def filterColor(img,color):
             im[i,j]=np.multiply((r,g,b,dt),coef)
     return im
 
-def fft(img):
-    ft = np.fft.fft(img)
-    freq = np.fft.fftfreq(len(img))
-    plt.plot(freq, ft.real**2 + ft.imag**2)
+def showImagefft(imgName):
+    import cv2
+    plt.figure()
+    img = cv2.imread(imgName,0)
+    fshift = np.fft.fftshift(np.fft.fft2(img)) #image is shifted to center
+    spectrum = np.log(np.abs(fshift)) #on enleve les valeurs complexes
+
+    plt.subplot(121),plt.imshow(img, cmap = 'gray')
+    plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+    plt.subplot(122),plt.imshow(spectrum, cmap = 'gray')
+    plt.title('Spectrum via FFT'), plt.xticks([]), plt.yticks([])
 
 def show(title,suptitle,img,index):
     plt.figure(title)
@@ -56,13 +63,20 @@ def showSubPlot(index,img):
     a.axes.get_xaxis().set_visible(False)
     a.axes.get_yaxis().set_visible(False)
 
-img = mpimg.imread(getFileName())
-if img.dtype == np.float32: # Si le résultat n'est pas un tableau d'entiers
-    img = (img * 255).astype(np.uint8)
+def getImage(imgName):
+    img = mpimg.imread(imgName)
+    if img.dtype == np.float32: # Si le résultat n'est pas un tableau d'entiers
+        img = (img * 255).astype(np.uint8)
+    return img
 
-show("RGB","Filtre RGB",img,1)
-show("CMY","Filtre CMY",img,5)
-show("GREY","Filtre Gris",img,4)
-#fft(img)
-plt.show()
+
+
+if __name__ == "__main__":
+    imgName = getFileName()
+    show("RGB","Filtre RGB",getImage(imgName),1)
+    show("CMY","Filtre CMY",getImage(imgName),5)
+    show("GREY","Filtre Gris",getImage(imgName),4)
+    showImagefft(imgName)     
+
+    plt.show()
 
