@@ -1,5 +1,16 @@
+from tkinter import filedialog
+from tkinter import *
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage
+import matplotlib.image as mpimg
+
+
+def getFileName():
+    root = Tk()
+    fileName = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
+    root.destroy()
+    return fileName
 
 def gaussian_kernel(size, sigma=1):
     size = int(size) // 2
@@ -96,3 +107,13 @@ def hysteresis(img, weak, strong=255):
                 except IndexError as e:
                     pass
     return img
+
+plt.figure()
+img = mpimg.imread(getFileName())
+if img.dtype == np.float32: # Si le résultat n'est pas un tableau d'entiers
+    img = (img * 255).astype(np.uint8)
+plt.subplot(131),plt.imshow(img, cmap = 'gray')
+plt.title('Original Image'), plt.xticks([]), plt.yticks([])
+plt.subplot(132),plt.imshow(sobel_filters(img), cmap = 'gray')
+plt.title('Ssobel_Filter'), plt.xticks([]), plt.yticks([])
+plt.show()

@@ -41,12 +41,14 @@ def showImagefft(imgName):
     plt.figure()
     img = cv2.imread(imgName,0)
     fshift = np.fft.fftshift(np.fft.fft2(img)) #image is shifted to center
-    spectrum = np.log(np.abs(fshift)) #on enleve les valeurs complexes
-
-    plt.subplot(121),plt.imshow(img, cmap = 'gray')
+    spectrum = np.log(np.abs(fshift)) #remove complex values
+    newImage = np.abs(np.fft.ifft2(np.fft.ifftshift(fshift)))
+    plt.subplot(131),plt.imshow(img, cmap = 'gray')
     plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-    plt.subplot(122),plt.imshow(spectrum, cmap = 'gray')
+    plt.subplot(132),plt.imshow(spectrum, cmap = 'gray')
     plt.title('Spectrum via FFT'), plt.xticks([]), plt.yticks([])
+    plt.subplot(133),plt.imshow(newImage, cmap = 'gray')
+    plt.title('Reconstitued Image'), plt.xticks([]), plt.yticks([])
 
 def show(title,suptitle,img,index):
     plt.figure(title)
@@ -73,9 +75,9 @@ def getImage(imgName):
 
 if __name__ == "__main__":
     imgName = getFileName()
-    show("RGB","Filtre RGB",getImage(imgName),1)
-    show("CMY","Filtre CMY",getImage(imgName),5)
-    show("GREY","Filtre Gris",getImage(imgName),4)
+    #show("RGB","Filtre RGB",getImage(imgName),1)
+    #show("CMY","Filtre CMY",getImage(imgName),5)
+    #show("GREY","Filtre Gris",getImage(imgName),4)
     showImagefft(imgName)     
 
     plt.show()
