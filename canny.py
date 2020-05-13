@@ -3,14 +3,74 @@ from tkinter import *
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage
-import matplotlib.image as mpimg
-
+import cv2
+import math
 
 def getFileName():
     root = Tk()
     fileName = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
     root.destroy()
-    return fileName
+    return fileName 
+ 
+def non_max_suppression(gradient_magnitude, gradient_direction):
+    image_row, image_col = gradient_magnitude.shape
+ 
+    output = np.zeros(gradient_magnitude.shape)
+ 
+    PI = 180
+ 
+    for row in range(1, image_row - 1):
+        for col in range(1, image_col - 1):
+            direction = gradient_direction[row, col]
+ 
+            if (0 <= direction < PI / 8) or (15 * PI / 8 <= direction <= 2 * PI):
+                before_pixel = gradient_magnitude[row, col - 1]
+                after_pixel = gradient_magnitude[row, col + 1]
+ 
+            elif (PI / 8 <= direction < 3 * PI / 8) or (9 * PI / 8 <= direction < 11 * PI / 8):
+                before_pixel = gradient_magnitude[row + 1, col - 1]
+                after_pixel = gradient_magnitude[row - 1, col + 1]
+ 
+            elif (3 * PI / 8 <= direction < 5 * PI / 8) or (11 * PI / 8 <= direction < 13 * PI / 8):
+                before_pixel = gradient_magnitude[row - 1, col]
+                after_pixel = gradient_magnitude[row + 1, col]
+ 
+            else:
+                before_pixel = gradient_magnitude[row - 1, col - 1]
+                after_pixel = gradient_magnitude[row + 1, col + 1]
+ 
+            if gradient_magnitude[row, col] >= before_pixel and gradient_magnitude[row, col] >= after_pixel:
+                output[row, col] = gradient_magnitude[row, col]
+ 
+    return output
+ 
+ 
+def threshold(image, low, high, weak,strong =255):
+    newImage = np.zeros(image.shape)
+  
+    strong_row, strong_col = np.where(image >= high)
+    weak_row, weak_col = np.where((image <= high) & (image >= low))
+ 
+    newImage[strong_row, strong_col] = strong
+    newImage[weak_row, weak_col] = weak
+ 
+    return newImage
+ 
+def hysteresis(img, weak, strong=255):
+    M, N = img.shape  
+    for i in range(1, M-1):
+        for j in range(1, N-1):
+            if (img[i,j] == weak):
+                try:
+                    if ((img[i+1, j-1] == strong) or (img[i+1, j] == strong) or (img[i+1, j+1] == strong)
+                        or (img[i, j-1] == strong) or (img[i, j+1] == strong)
+                        or (img[i-1, j-1] == strong) or (img[i-1, j] == strong) or (img[i-1, j+1] == strong)):
+                        img[i, j] = strong
+                    else:
+                        img[i, j] = 0
+                except IndexError as e:
+                    pass
+    return img
 
 def gaussian_kernel(size, sigma=1):
     size = int(size) // 2
@@ -32,88 +92,70 @@ def sobel_filters(img):
     
     return (G, theta)
 
-def non_max_suppression(img, D):
-    M, N = img.shape
-    Z = np.zeros((M,N), dtype=np.int32)
-    angle = D * 180. / np.pi
-    angle[angle < 0] += 180
+def convolution(image, kernel, average=False):
+    if len(image.shape) == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    
-    for i in range(1,M-1):
-        for j in range(1,N-1):
-            try:
-                q = 255
-                r = 255
-                
-               #angle 0
-                if (0 <= angle[i,j] < 22.5) or (157.5 <= angle[i,j] <= 180):
-                    q = img[i, j+1]
-                    r = img[i, j-1]
-                #angle pi/4
-                elif (22.5 <= angle[i,j] < 67.5):
-                    q = img[i+1, j-1]
-                    r = img[i-1, j+1]
-                #angle pi/2
-                elif (67.5 <= angle[i,j] < 112.5):
-                    q = img[i+1, j]
-                    r = img[i-1, j]
-                #angle 3pi/4
-                elif (112.5 <= angle[i,j] < 157.5):
-                    q = img[i-1, j-1]
-                    r = img[i+1, j+1]
+    image_row, image_col = image.shape
+    kernel_row, kernel_col = kernel.shape
 
-                if (img[i,j] >= q) and (img[i,j] >= r):
-                    Z[i,j] = img[i,j]
-                else:
-                    Z[i,j] = 0
+    output = np.zeros(image.shape)
 
-            except IndexError as e:
-                pass
-    
-    return Z
-def threshold(img, lowThresholdRatio=0.05, highThresholdRatio=0.09):
-    
-    highThreshold = img.max() * highThresholdRatio
-    lowThreshold = highThreshold * lowThresholdRatio
-    
-    M, N = img.shape
-    res = np.zeros((M,N), dtype=np.int32)
-    
-    weak = np.int32(25)
-    strong = np.int32(255)
-    
-    strong_i, strong_j = np.where(img >= highThreshold)
-    zeros_i, zeros_j = np.where(img < lowThreshold)
-    
-    weak_i, weak_j = np.where((img <= highThreshold) & (img >= lowThreshold))
-    
-    res[strong_i, strong_j] = strong
-    res[weak_i, weak_j] = weak
-    
-    return (res, weak, strong)
+    pad_height = int((kernel_row - 1) / 2)
+    pad_width = int((kernel_col - 1) / 2)
 
-def hysteresis(img, weak, strong=255):
-    M, N = img.shape  
-    for i in range(1, M-1):
-        for j in range(1, N-1):
-            if (img[i,j] == weak):
-                try:
-                    if ((img[i+1, j-1] == strong) or (img[i+1, j] == strong) or (img[i+1, j+1] == strong)
-                        or (img[i, j-1] == strong) or (img[i, j+1] == strong)
-                        or (img[i-1, j-1] == strong) or (img[i-1, j] == strong) or (img[i-1, j+1] == strong)):
-                        img[i, j] = strong
-                    else:
-                        img[i, j] = 0
-                except IndexError as e:
-                    pass
-    return img
+    padded_image = np.zeros((image_row + (2 * pad_height), image_col + (2 * pad_width)))
 
-plt.figure()
-img = mpimg.imread(getFileName())
-if img.dtype == np.float32: # Si le résultat n'est pas un tableau d'entiers
-    img = (img * 255).astype(np.uint8)
-plt.subplot(131),plt.imshow(img, cmap = 'gray')
-plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-plt.subplot(132),plt.imshow(sobel_filters(img), cmap = 'gray')
-plt.title('Ssobel_Filter'), plt.xticks([]), plt.yticks([])
-plt.show()
+    padded_image[pad_height:padded_image.shape[0] - pad_height, pad_width:padded_image.shape[1] - pad_width] = image
+
+    for row in range(image_row):
+        for col in range(image_col):
+            output[row, col] = np.sum(kernel * padded_image[row:row + kernel_row, col:col + kernel_col])
+            if average:
+                output[row, col] /= kernel.shape[0] * kernel.shape[1]
+
+    return output
+
+def dnorm(x, mu, sd):
+    return 1 / (np.sqrt(2 * np.pi) * sd) * np.e ** (-np.power((x - mu) / sd, 2) / 2)
+
+def gaussian_blur(image, kernel_size):
+    return convolution(image, gaussian_kernel(kernel_size, sigma=math.sqrt(kernel_size)), average=True)
+
+def sobel_edge_detection(image, filter, convert_to_degree=FALSE):
+    new_image_x = convolution(image, filter)
+    new_image_y = convolution(image, np.flip(filter.T, axis=0))
+
+    gradient_magnitude = np.sqrt(np.square(new_image_x) + np.square(new_image_y))
+
+    gradient_magnitude *= 255.0 / gradient_magnitude.max()
+
+    gradient_direction = np.arctan2(new_image_y, new_image_x)
+
+    if convert_to_degree:
+        gradient_direction = np.rad2deg(gradient_direction)
+        gradient_direction += 180
+
+    return gradient_magnitude, gradient_direction
+
+if __name__ == '__main__':
+ 
+    image = cv2.imread(getFileName())
+ 
+    blurred_image = gaussian_blur(image, kernel_size=2)
+ 
+    edge_filter = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+ 
+    gradient_magnitude, gradient_direction = sobel_edge_detection(blurred_image, edge_filter, convert_to_degree=True)
+ 
+    new_image = non_max_suppression(gradient_magnitude, gradient_direction)
+ 
+    weak = 25
+ 
+    ImageTresHold = threshold(new_image, 5, 20, weak=weak)
+ 
+    CannyImage = hysteresis(ImageTresHold, weak)
+ 
+    plt.imshow(CannyImage, cmap='gray')
+    plt.title("Canny Edge Detector")
+    plt.show()
