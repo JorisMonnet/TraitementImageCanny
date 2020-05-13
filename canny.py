@@ -45,7 +45,7 @@ def non_max_suppression(gradient_magnitude, gradient_direction):
     return output
  
  
-def threshold(image, low, high, weak,strong =255):
+def threshold(image, low, high, weak,strong):
     newImage = np.zeros(image.shape)
   
     strong_row, strong_col = np.where(image >= high)
@@ -56,7 +56,7 @@ def threshold(image, low, high, weak,strong =255):
  
     return newImage
  
-def hysteresis(img, weak, strong=255):
+def hysteresis(img, weak, strong):
     M, N = img.shape  
     for i in range(1, M-1):
         for j in range(1, N-1):
@@ -92,7 +92,7 @@ def sobel_filters(img):
     
     return (G, theta)
 
-def convolution(image, kernel, average=False):
+def convolution(image, kernel):
     if len(image.shape) == 3:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -111,8 +111,6 @@ def convolution(image, kernel, average=False):
     for row in range(image_row):
         for col in range(image_col):
             output[row, col] = np.sum(kernel * padded_image[row:row + kernel_row, col:col + kernel_col])
-            if average:
-                output[row, col] /= kernel.shape[0] * kernel.shape[1]
 
     return output
 
@@ -120,9 +118,9 @@ def dnorm(x, mu, sd):
     return 1 / (np.sqrt(2 * np.pi) * sd) * np.e ** (-np.power((x - mu) / sd, 2) / 2)
 
 def gaussian_blur(image, kernel_size):
-    return convolution(image, gaussian_kernel(kernel_size, sigma=math.sqrt(kernel_size)), average=True)
+    return convolution(image, gaussian_kernel(kernel_size, sigma=math.sqrt(kernel_size)))
 
-def sobel_edge_detection(image, filter, convert_to_degree=FALSE):
+def sobel_edge_detection(image, filter):
     new_image_x = convolution(image, filter)
     new_image_y = convolution(image, np.flip(filter.T, axis=0))
 
@@ -132,29 +130,23 @@ def sobel_edge_detection(image, filter, convert_to_degree=FALSE):
 
     gradient_direction = np.arctan2(new_image_y, new_image_x)
 
-    if convert_to_degree:
-        gradient_direction = np.rad2deg(gradient_direction)
-        gradient_direction += 180
-
     return gradient_magnitude, gradient_direction
 
 if __name__ == '__main__':
  
     image = cv2.imread(getFileName())
- 
+    weak = 25
+    strong = 255
+
     blurred_image = gaussian_blur(image, kernel_size=2)
- 
-    edge_filter = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
- 
-    gradient_magnitude, gradient_direction = sobel_edge_detection(blurred_image, edge_filter, convert_to_degree=True)
+  
+    gradient_magnitude, gradient_direction = sobel_edge_detection(blurred_image, np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]))
  
     new_image = non_max_suppression(gradient_magnitude, gradient_direction)
+
+    ImageTresHold = threshold(new_image, 5, 20, weak,strong)
  
-    weak = 25
- 
-    ImageTresHold = threshold(new_image, 5, 20, weak=weak)
- 
-    CannyImage = hysteresis(ImageTresHold, weak)
+    CannyImage = hysteresis(ImageTresHold, weak,strong)
  
     plt.imshow(CannyImage, cmap='gray')
     plt.title("Canny Edge Detector")
