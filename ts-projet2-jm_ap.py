@@ -22,7 +22,7 @@ def filterColor(img,color):
     }
 
     coef=switcher.get(color)
-    im = np.copy(img) # On fait une copie de l'original
+    im = np.copy(img) # On fait une copie de l'original        
     for i in range(im.shape[0]):
         for j in range(im.shape[1]):
             try :
@@ -50,7 +50,7 @@ def showImagefft(img):
     newImage = np.abs(np.fft.ifft2(np.fft.ifftshift(fshift)))
     plt.subplot(131),plt.imshow(img)
     plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-    plt.subplot(132),plt.imshow((fshift * 255).astype(np.uint8),cmap="gray")
+    plt.subplot(132),plt.imshow((np.abs(fshift) * 255).astype(np.uint8),cmap="gray")
     plt.title('Spectrum via FFT'), plt.xticks([]), plt.yticks([])
     plt.subplot(133),plt.imshow((newImage * 255).astype(np.uint8))
     plt.title('Reconstitued Image'), plt.xticks([]), plt.yticks([])
@@ -80,9 +80,9 @@ def getImage(imgName):
 
 if __name__ == "__main__":
     imgName = getFileName()
-    #show("RGB","Filtre RGB",getImage(imgName),1)
-    #show("CMY","Filtre CMY",getImage(imgName),5)
-    #show("GREY","Filtre Gris",getImage(imgName),4)
+    show("RGB","Filtre RGB",getImage(imgName),1)
+    show("CMY","Filtre CMY",getImage(imgName),5)
+    show("GREY","Filtre Gris",getImage(imgName),4)
     showImagefft(filterColor(getImage(imgName),4))     
 
     plt.show()
