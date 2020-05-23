@@ -25,29 +25,34 @@ def filterColor(img,color):
     im = np.copy(img) # On fait une copie de l'original
     for i in range(im.shape[0]):
         for j in range(im.shape[1]):
-            r, g, b, dt = im[i, j]
+            try :
+                r, g, b, dt = im[i, j]
+            except:
+                r,g,b = im[i, j]
             if(color>4):
                 tab=[r*coef[0],g*coef[1],b*coef[2]]
                 tab.remove(0)
                 r=g=b=min(tab)
             elif(color==4):
                 r = g = b = int(0.299 * r + 0.587 * g + 0.114 * b)
-            
-            im[i,j]=np.multiply((r,g,b,dt),coef)
+            try:
+                im[i,j]=np.multiply((r,g,b,dt),coef)
+            except:
+                im[i,j]=r,g,b
     return im
-
-def showImagefft(imgName):
-    import cv2
+"""
+matplotlib issue in imshow:
+https://github.com/matplotlib/matplotlib/issues/9391/
+"""
+def showImagefft(img):
     plt.figure()
-    img = cv2.imread(imgName,0)
-    fshift = np.fft.fftshift(np.fft.fft2(img)) #image is shifted to center
-    spectrum = np.log(np.abs(fshift)) #remove complex values
+    fshift = np.fft.fftshift(np.fft.fft2((img * 255).astype(np.uint8))) #image is shifted to center
     newImage = np.abs(np.fft.ifft2(np.fft.ifftshift(fshift)))
-    plt.subplot(131),plt.imshow(img, cmap = 'gray')
+    plt.subplot(131),plt.imshow(img)
     plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-    plt.subplot(132),plt.imshow(spectrum, cmap = 'gray')
+    plt.subplot(132),plt.imshow((fshift * 255).astype(np.uint8),cmap="gray")
     plt.title('Spectrum via FFT'), plt.xticks([]), plt.yticks([])
-    plt.subplot(133),plt.imshow(newImage, cmap = 'gray')
+    plt.subplot(133),plt.imshow((newImage * 255).astype(np.uint8))
     plt.title('Reconstitued Image'), plt.xticks([]), plt.yticks([])
 
 def show(title,suptitle,img,index):
@@ -67,7 +72,7 @@ def showSubPlot(index,img):
 
 def getImage(imgName):
     img = mpimg.imread(imgName)
-    if img.dtype == np.float32: # Si le résultat n'est pas un tableau d'entiers
+    if img.dtype != np.uint8: # Si le résultat n'est pas un tableau d'entiers
         img = (img * 255).astype(np.uint8)
     return img
 
@@ -78,7 +83,7 @@ if __name__ == "__main__":
     #show("RGB","Filtre RGB",getImage(imgName),1)
     #show("CMY","Filtre CMY",getImage(imgName),5)
     #show("GREY","Filtre Gris",getImage(imgName),4)
-    showImagefft(imgName)     
+    showImagefft(filterColor(getImage(imgName),4))     
 
     plt.show()
 
