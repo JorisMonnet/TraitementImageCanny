@@ -144,7 +144,7 @@ if __name__ == '__main__':
  
     new_image = non_max_suppression(gradient_magnitude, gradient_direction)
 
-    ImageTresHold = threshold(new_image, 5, 20, weak,strong)
+    ImageTresHold = threshold(new_image, 5, 25, weak,strong)
  
     CannyImage = hysteresis(ImageTresHold, weak,strong)
  
