@@ -88,17 +88,16 @@ def getImage(imgName):
     for i in range(row):
         for j in range(col):
             r,g,b = img[i,j]
-            if(r>5 or g>5 or b>5):
-                rgb[i,j]=r,g,b,255
+            rgb[i,j]=r,g,b,255
 
     return np.asarray(rgb, dtype='uint8')
 
 if __name__ == "__main__":
     imgName = getFileName()
-    #show("RGB","Filtre RGB",getImage(imgName),1)
-    #show("CMY","Filtre CMY",getImage(imgName),5)
-    #show("GREY","Filtre Gris",getImage(imgName),4)
-    showImagefft(filterColor(getImage(imgName),4))     
+    show("RGB","Filtre RGB",getImage(imgName),1)
+    show("CMY","Filtre CMY",getImage(imgName),5)
+    show("GREY","Filtre Gris",getImage(imgName),4)
+    #showImagefft(filterColor(getImage(imgName),4))     
 
     plt.show()
 

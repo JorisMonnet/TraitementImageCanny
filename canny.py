@@ -3,8 +3,9 @@ from tkinter import *
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage
-import cv2
 import math
+import matplotlib.image as mpimg
+
 
 def getFileName():
     root = Tk()
@@ -93,9 +94,14 @@ def sobel_filters(img):
     return (G, theta)
 
 def convolution(image, kernel):
-    if len(image.shape) == 3:
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
+    if len(image.shape) > 2:
+        im = np.zeros([image.shape[0],image.shape[1]])
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                r,g,b,dt = image[i,j]
+                grey= int(0.299 * r + 0.587 * g + 0.114 * b)
+                im[i,j]=grey
+        image = np.asarray(im,dtype = "uint8")
     image_row, image_col = image.shape
     kernel_row, kernel_col = kernel.shape
 
@@ -131,10 +137,60 @@ def sobel_edge_detection(image, filter):
     gradient_direction = np.arctan2(new_image_y, new_image_x)
 
     return gradient_magnitude, gradient_direction
+def getImage(imgName):
+    img = mpimg.imread(imgName)
+    if img.dtype != np.uint8: # Si le résultat n'est pas un tableau d'entiers
+        img = (img * 255).astype(np.uint8)
+    
+    row, col, ch = img.shape
 
+    if ch == 4: #image rgba
+        return img
+
+    if ch != 3 :  #image non rgb 
+        raise Exception("Bad Image Type")
+    """
+    If the image is only rgb, by adding the opacity, the blank around the images is used into the filtering of colors and 
+    the other functionnalities of this project, try to avoid rgb images and prefer rgba to have a better view of the functionnalities
+    """
+    rgb = np.zeros([row,col,4])
+    for i in range(row):
+        for j in range(col):
+            r,g,b = img[i,j]
+            rgb[i,j]=r,g,b,255
+
+    return np.asarray(rgb, dtype='uint8')
+def filterColor(img,color):
+    switcher = {
+        1: (1, 0, 0, 1),    #r
+        2: (0, 1, 0, 1),    #g
+        3: (0, 0, 1, 1),    #b
+        4: (1, 1, 1, 1),    #grey
+        5: (1, 1, 0, 1),    #c
+        6: (1, 0, 1, 1),    #m
+        7: (0, 1, 1, 1)     #y
+    }
+
+    coef=switcher.get(color)
+    im = np.copy(img)
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            try :
+                r, g, b, dt = im[i, j]
+            except:
+                r,g,b = im[i,j]
+                dt=1
+            if(color>4):
+                tab=[r*coef[0],g*coef[1],b*coef[2]]
+                tab.remove(0)
+                r=g=b=min(tab)
+            elif(color==4):
+                r = g = b = int(0.299 * r + 0.587 * g + 0.114 * b)
+            im[i,j]=np.multiply((r,g,b,dt),coef)
+    return im
 if __name__ == '__main__':
  
-    image = cv2.imread(getFileName())
+    image = filterColor(getImage(getFileName()),4)
     weak = 25
     strong = 255
 
