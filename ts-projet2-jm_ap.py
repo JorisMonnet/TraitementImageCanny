@@ -22,23 +22,21 @@ def filterColor(img,color):
     }
 
     coef=switcher.get(color)
-    im = np.copy(img) # On fait une copie de l'original        
-    for i in range(im.shape[0]):
-        for j in range(im.shape[1]):
+    im = np.copy(img)
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
             try :
                 r, g, b, dt = im[i, j]
             except:
-                r,g,b = im[i, j]
+                r,g,b = im[i,j]
+                dt=1
             if(color>4):
                 tab=[r*coef[0],g*coef[1],b*coef[2]]
                 tab.remove(0)
                 r=g=b=min(tab)
             elif(color==4):
                 r = g = b = int(0.299 * r + 0.587 * g + 0.114 * b)
-            try:
-                im[i,j]=np.multiply((r,g,b,dt),coef)
-            except:
-                im[i,j]=r,g,b
+            im[i,j]=np.multiply((r,g,b,dt),coef)
     return im
 """
 matplotlib issue in imshow:
@@ -74,15 +72,32 @@ def getImage(imgName):
     img = mpimg.imread(imgName)
     if img.dtype != np.uint8: # Si le résultat n'est pas un tableau d'entiers
         img = (img * 255).astype(np.uint8)
-    return img
+    
+    row, col, ch = img.shape
 
+    if ch == 4: #image rgba
+        return img
 
+    if ch != 3 :  #image non rgb 
+        raise Exception("Bad Image Type")
+    """
+    If the image is only rgb, by adding the opacity, the blank around the images is used into the filtering of colors and 
+    the other functionnalities of this project, try to avoid rgb images and prefer rgba to have a better view of the functionnalities
+    """
+    rgb = np.zeros([row,col,4])
+    for i in range(row):
+        for j in range(col):
+            r,g,b = img[i,j]
+            if(r>5 or g>5 or b>5):
+                rgb[i,j]=r,g,b,255
+
+    return np.asarray(rgb, dtype='uint8')
 
 if __name__ == "__main__":
     imgName = getFileName()
-    show("RGB","Filtre RGB",getImage(imgName),1)
-    show("CMY","Filtre CMY",getImage(imgName),5)
-    show("GREY","Filtre Gris",getImage(imgName),4)
+    #show("RGB","Filtre RGB",getImage(imgName),1)
+    #show("CMY","Filtre CMY",getImage(imgName),5)
+    #show("GREY","Filtre Gris",getImage(imgName),4)
     showImagefft(filterColor(getImage(imgName),4))     
 
     plt.show()
