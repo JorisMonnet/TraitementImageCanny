@@ -168,13 +168,32 @@ def canny(img):
     
     imageTresHold, weak, strong = threshold(imageNonMax)
     
-    CannyImage = hysteresis(imageTresHold, weak, strong)
-    
+    return hysteresis(imageTresHold, weak, strong)
+
+"""
+show the canny image
+param = image source
+"""
+def showCanny(img):
     plt.figure("Canny Edge Detector")
-    plt.imshow(CannyImage, cmap='gray')
+    plt.imshow(canny(img), cmap='gray')
+
+"""
+show a canny image with the cv2 library to compare
+"""
+def cannyCV2():
+    import cv2 as cv
+    im = cv.imread('imgTest.png',0)
+    ret, thresh = cv.threshold(im, 245, 255, 0)
+    contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    plt.figure("Canny via cv2")
+    plt.imshow(cv.drawContours(im, contours, -1, (0,0,0), 1),cmap="gray")
 
 """
 filter the colors of an image and return the result
+param = image source 
+color index : 1 = red; 2 = green; 3 = blue; 4 = grey
+5 = cyan;  6 = magenta; 7 = yellow
 """
 def filterColor(img,color):
     switcher = {
@@ -211,14 +230,14 @@ this function show the original image , the spectrum centered of the fast fourie
 and then recreate the image from the spectrum
 """
 def showImagefft(img):
-    plt.figure()
+    plt.figure("Fast Fourier Transform")
     fshift = np.fft.fftshift(np.fft.fft2((img * 255).astype(np.uint8))) #image is shifted to center
     newImage = np.abs(np.fft.ifft2(np.fft.ifftshift(fshift)))
-    plt.subplot(131),plt.imshow(img)
+    plt.subplot(131),plt.imshow(img,cmap="gray")
     plt.title('Original Image'), plt.xticks([]), plt.yticks([])
     plt.subplot(132),plt.imshow((np.abs(fshift) * 255).astype(np.uint8),cmap="gray")
     plt.title('Spectrum via FFT'), plt.xticks([]), plt.yticks([])
-    plt.subplot(133),plt.imshow((newImage * 255).astype(np.uint8))
+    plt.subplot(133),plt.imshow((newImage * 255).astype(np.uint8),cmap="gray")
     plt.title('Reconstitued Image'), plt.xticks([]), plt.yticks([])
 
 """
@@ -273,11 +292,12 @@ def getImage():
     return np.asarray(rgb, dtype='uint8')
 
 if __name__ == "__main__":
-    img = getImage()
+    #img = getImage()
     #show("RGB","Filtre RGB",img,1)
     #show("CMY","Filtre CMY",img,5)
     #show("GREY","Filtre Gris",img,4)
     #showImagefft(filterColor(img,4)) 
-    canny(img)
-
+    #showImagefft(canny(img)) #compare after canny
+    #showCanny(img)
+    cannyCV2()
     plt.show()
