@@ -5,12 +5,53 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage
 
+"""
+gaussian kernel, useful to blur an image
+"""
 def gaussian_kernel(size, sigma=1):
     size = int(size) // 2
     x, y = np.mgrid[-size:size+1, -size:size+1]
     normal = 1 / (2.0 * np.pi * sigma**2)
     return  np.exp(-((x**2 + y**2) / (2.0*sigma**2))) * normal
 
+"""
+return an image blured with a gaussain_kernel
+"""
+def gaussian_blur(image, kernel_size):
+    return convolution(image, gaussian_kernel(kernel_size))
+
+"""
+allow to convolve the gaussian kernel and an image to blur it
+"""
+def convolution(image, kernel):
+    if len(image.shape) > 2:
+        im = np.zeros([image.shape[0],image.shape[1]])
+        for i in range(image.shape[0]):
+            for j in range(image.shape[1]):
+                r,g,b,dt = image[i,j]
+                im[i,j]= int(0.299 * r + 0.587 * g + 0.114 * b)
+        image = np.asarray(im,dtype = "uint8")
+    image_row, image_col = image.shape
+    kernel_row, kernel_col = kernel.shape
+
+    output = np.zeros(image.shape)
+
+    pad_height = int((kernel_row - 1) / 2)
+    pad_width = int((kernel_col - 1) / 2)
+
+    padded_image = np.zeros((image_row + (2 * pad_height), image_col + (2 * pad_width)))
+
+    padded_image[pad_height:padded_image.shape[0] - pad_height, pad_width:padded_image.shape[1] - pad_width] = image
+
+    for row in range(image_row):
+        for col in range(image_col):
+            output[row, col] = np.sum(kernel * padded_image[row:row + kernel_row, col:col + kernel_col])
+
+    return output
+
+"""
+detect the edge intensity and direction by calculating the gradient
+"""
 def sobel_filters(img):
     Kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], np.float32)
     Ky = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]], np.float32)
@@ -18,12 +59,15 @@ def sobel_filters(img):
     Ix = ndimage.filters.convolve(img, Kx)
     Iy = ndimage.filters.convolve(img, Ky)
     
-    G = np.hypot(Ix, Iy)
-    G = G / G.max() * 255
+    gradient = np.hypot(Ix, Iy)
+    gradient = gradient / gradient.max() * 255
     theta = np.arctan2(Iy, Ix)
     
-    return (G, theta)
+    return (gradient, theta)
 
+"""
+allow to thin out the edges
+"""
 def non_max_suppression(img, gradient_direction):
     row, col = img.shape
  
@@ -65,6 +109,11 @@ def non_max_suppression(img, gradient_direction):
     
     return result
 
+"""
+identify the pixel as strong(they contribute to edges) 
+or weak (they maybe contribute) 
+or non relevant ( they don't contribute)
+"""
 def threshold(img, lowThresholdRatio=0.05, highThresholdRatio=0.09):
     
     highThreshold = img.max() * highThresholdRatio;
@@ -86,6 +135,9 @@ def threshold(img, lowThresholdRatio=0.05, highThresholdRatio=0.09):
     
     return (res, weak, strong)
 
+"""
+allow weak pixels to become strong if there is others strong pixel near them
+"""
 def hysteresis(img, weak, strong):
     M, N = img.shape  
     for i in range(1, M-1):
@@ -102,35 +154,9 @@ def hysteresis(img, weak, strong):
                     pass
     return img
 
-def convolution(image, kernel):
-    if len(image.shape) > 2:
-        im = np.zeros([image.shape[0],image.shape[1]])
-        for i in range(image.shape[0]):
-            for j in range(image.shape[1]):
-                r,g,b,dt = image[i,j]
-                im[i,j]= int(0.299 * r + 0.587 * g + 0.114 * b)
-        image = np.asarray(im,dtype = "uint8")
-    image_row, image_col = image.shape
-    kernel_row, kernel_col = kernel.shape
-
-    output = np.zeros(image.shape)
-
-    pad_height = int((kernel_row - 1) / 2)
-    pad_width = int((kernel_col - 1) / 2)
-
-    padded_image = np.zeros((image_row + (2 * pad_height), image_col + (2 * pad_width)))
-
-    padded_image[pad_height:padded_image.shape[0] - pad_height, pad_width:padded_image.shape[1] - pad_width] = image
-
-    for row in range(image_row):
-        for col in range(image_col):
-            output[row, col] = np.sum(kernel * padded_image[row:row + kernel_row, col:col + kernel_col])
-
-    return output
-
-def gaussian_blur(image, kernel_size):
-    return convolution(image, gaussian_kernel(kernel_size))
-
+"""
+use all the previous functions to create an image of the contoutrs of a source image via canny
+"""
 def canny(img):
     image = filterColor(img,4)
 
@@ -144,10 +170,12 @@ def canny(img):
     
     CannyImage = hysteresis(imageTresHold, weak, strong)
     
-    plt.figure()
+    plt.figure("Canny Edge Detector")
     plt.imshow(CannyImage, cmap='gray')
-    plt.title("Canny Edge Detector")
 
+"""
+filter the colors of an image and return the result
+"""
 def filterColor(img,color):
     switcher = {
         1: (1, 0, 0, 1),    #r
@@ -178,8 +206,9 @@ def filterColor(img,color):
     return im
 
 """
-matplotlib issue in imshow:
-https://github.com/matplotlib/matplotlib/issues/9391/
+matplotlib issue in imshow: https://github.com/matplotlib/matplotlib/issues/9391/
+this function show the original image , the spectrum centered of the fast fourier transform,
+and then recreate the image from the spectrum
 """
 def showImagefft(img):
     plt.figure()
@@ -192,6 +221,9 @@ def showImagefft(img):
     plt.subplot(133),plt.imshow((newImage * 255).astype(np.uint8))
     plt.title('Reconstitued Image'), plt.xticks([]), plt.yticks([])
 
+"""
+show a figure withe colorFiltered image
+"""
 def show(title,suptitle,img,index):
     plt.figure(title)
     plt.suptitle(suptitle)
@@ -201,12 +233,18 @@ def show(title,suptitle,img,index):
         showSubPlot(223,filterColor(img,index+1))
         showSubPlot(224,filterColor(img,index+2))
 
+"""
+remove axes on the subplot and show the image
+"""
 def showSubPlot(index,img):
     plt.subplot(index)
     a=plt.imshow(img)
     a.axes.get_xaxis().set_visible(False)
     a.axes.get_yaxis().set_visible(False)
 
+"""
+open an image from a filedialog at the rgba format
+"""
 def getImage():
     root = Tk()
     fileName = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
