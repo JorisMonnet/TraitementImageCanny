@@ -4,50 +4,87 @@ import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import ndimage
-import math
 
-def non_max_suppression(gradient_magnitude, gradient_direction):
-    image_row, image_col = gradient_magnitude.shape
- 
-    output = np.zeros(gradient_magnitude.shape)
- 
-    PI = 180
- 
-    for row in range(1, image_row - 1):
-        for col in range(1, image_col - 1):
-            direction = gradient_direction[row, col]
- 
-            if (0 <= direction < PI / 8) or (15 * PI / 8 <= direction <= 2 * PI):
-                before_pixel = gradient_magnitude[row, col - 1]
-                after_pixel = gradient_magnitude[row, col + 1]
- 
-            elif (PI / 8 <= direction < 3 * PI / 8) or (9 * PI / 8 <= direction < 11 * PI / 8):
-                before_pixel = gradient_magnitude[row + 1, col - 1]
-                after_pixel = gradient_magnitude[row - 1, col + 1]
- 
-            elif (3 * PI / 8 <= direction < 5 * PI / 8) or (11 * PI / 8 <= direction < 13 * PI / 8):
-                before_pixel = gradient_magnitude[row - 1, col]
-                after_pixel = gradient_magnitude[row + 1, col]
- 
-            else:
-                before_pixel = gradient_magnitude[row - 1, col - 1]
-                after_pixel = gradient_magnitude[row + 1, col + 1]
- 
-            if gradient_magnitude[row, col] >= before_pixel and gradient_magnitude[row, col] >= after_pixel:
-                output[row, col] = gradient_magnitude[row, col]
- 
-    return output
+def gaussian_kernel(size, sigma=1):
+    size = int(size) // 2
+    x, y = np.mgrid[-size:size+1, -size:size+1]
+    normal = 1 / (2.0 * np.pi * sigma**2)
+    return  np.exp(-((x**2 + y**2) / (2.0*sigma**2))) * normal
 
-def threshold(image, low, high, weak,strong):
-    newImage = np.zeros(image.shape)
-  
-    strong_row, strong_col = np.where(image >= high)
-    weak_row, weak_col = np.where((image <= high) & (image >= low))
+def sobel_filters(img):
+    Kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], np.float32)
+    Ky = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]], np.float32)
+    
+    Ix = ndimage.filters.convolve(img, Kx)
+    Iy = ndimage.filters.convolve(img, Ky)
+    
+    G = np.hypot(Ix, Iy)
+    G = G / G.max() * 255
+    theta = np.arctan2(Iy, Ix)
+    
+    return (G, theta)
+
+def non_max_suppression(img, gradient_direction):
+    row, col = img.shape
  
-    newImage[strong_row, strong_col] = strong
-    newImage[weak_row, weak_col] = weak
+    result = np.zeros((img.shape),dtype=np.int32)
  
-    return newImage
+    angle = gradient_direction * 180. / np.pi
+    angle[angle < 0] += 180
+ 
+    for i in range(1,row-1):
+        for j in range(1,col-1):
+            try:
+                q = 255
+                r = 255
+                
+               #angle 0
+                if (0 <= angle[i,j] < 22.5) or (157.5 <= angle[i,j] <= 180):
+                    q = img[i, j+1]
+                    r = img[i, j-1]
+                #angle 45
+                elif (22.5 <= angle[i,j] < 67.5):
+                    q = img[i+1, j-1]
+                    r = img[i-1, j+1]
+                #angle 90
+                elif (67.5 <= angle[i,j] < 112.5):
+                    q = img[i+1, j]
+                    r = img[i-1, j]
+                #angle 135
+                elif (112.5 <= angle[i,j] < 157.5):
+                    q = img[i-1, j-1]
+                    r = img[i+1, j+1]
+
+                if (img[i,j] >= q) and (img[i,j] >= r):
+                    result[i,j] = img[i,j]
+                else:
+                    result[i,j] = 0
+
+            except IndexError as e:
+                pass
+    
+    return result
+
+def threshold(img, lowThresholdRatio=0.05, highThresholdRatio=0.09):
+    
+    highThreshold = img.max() * highThresholdRatio;
+    lowThreshold = highThreshold * lowThresholdRatio;
+    
+    M, N = img.shape
+    res = np.zeros((M,N), dtype=np.int32)
+    
+    weak = np.int32(25)
+    strong = np.int32(255)
+    
+    strong_i, strong_j = np.where(img >= highThreshold)
+    zeros_i, zeros_j = np.where(img < lowThreshold)
+    
+    weak_i, weak_j = np.where((img <= highThreshold) & (img >= lowThreshold))
+    
+    res[strong_i, strong_j] = strong
+    res[weak_i, weak_j] = weak
+    
+    return (res, weak, strong)
 
 def hysteresis(img, weak, strong):
     M, N = img.shape  
@@ -65,34 +102,13 @@ def hysteresis(img, weak, strong):
                     pass
     return img
 
-def gaussian_kernel(size, sigma=1):
-    size = int(size) // 2
-    x, y = np.mgrid[-size:size+1, -size:size+1]
-    normal = 1 / (2.0 * np.pi * sigma**2)
-    g =  np.exp(-((x**2 + y**2) / (2.0*sigma**2))) * normal
-    return g
-
-def sobel_filters(img):
-    Kx = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]], np.float32)
-    Ky = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]], np.float32)
-    
-    Ix = ndimage.filters.convolve(img, Kx)
-    Iy = ndimage.filters.convolve(img, Ky)
-    
-    G = np.hypot(Ix, Iy)
-    G = G / G.max() * 255
-    theta = np.arctan2(Iy, Ix)
-    
-    return (G, theta)
-
 def convolution(image, kernel):
     if len(image.shape) > 2:
         im = np.zeros([image.shape[0],image.shape[1]])
         for i in range(image.shape[0]):
             for j in range(image.shape[1]):
                 r,g,b,dt = image[i,j]
-                grey= int(0.299 * r + 0.587 * g + 0.114 * b)
-                im[i,j]=grey
+                im[i,j]= int(0.299 * r + 0.587 * g + 0.114 * b)
         image = np.asarray(im,dtype = "uint8")
     image_row, image_col = image.shape
     kernel_row, kernel_col = kernel.shape
@@ -112,38 +128,22 @@ def convolution(image, kernel):
 
     return output
 
-def dnorm(x, mu, sd):
-    return 1 / (np.sqrt(2 * np.pi) * sd) * np.e ** (-np.power((x - mu) / sd, 2) / 2)
-
 def gaussian_blur(image, kernel_size):
-    return convolution(image, gaussian_kernel(kernel_size, sigma=math.sqrt(kernel_size)))
-
-def sobel_edge_detection(image, filter):
-    new_image_x = convolution(image, filter)
-    new_image_y = convolution(image, np.flip(filter.T, axis=0))
-
-    gradient_magnitude = np.sqrt(np.square(new_image_x) + np.square(new_image_y))
-
-    gradient_magnitude *= 255.0 / gradient_magnitude.max()
-
-    gradient_direction = np.arctan2(new_image_y, new_image_x)
-
-    return gradient_magnitude, gradient_direction
+    return convolution(image, gaussian_kernel(kernel_size))
 
 def canny(img):
     image = filterColor(img,4)
-    weak = 25
-    strong = 255
 
-    blurred_image = gaussian_blur(image, kernel_size=2)
+    blurred_image = gaussian_blur(image, kernel_size=4)
   
-    gradient_magnitude, gradient_direction = sobel_edge_detection(blurred_image, np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]))
+    imageSobel, gradient_direction = sobel_filters(blurred_image)
  
-    new_image = non_max_suppression(gradient_magnitude, gradient_direction)
-
-    ImageTresHold = threshold(new_image, 5, 25, weak,strong)
- 
-    CannyImage = hysteresis(ImageTresHold, weak,strong)
+    imageNonMax = non_max_suppression(imageSobel, gradient_direction)
+    
+    imageTresHold, weak, strong = threshold(imageNonMax)
+    
+    CannyImage = hysteresis(imageTresHold, weak, strong)
+    
     plt.figure()
     plt.imshow(CannyImage, cmap='gray')
     plt.title("Canny Edge Detector")
@@ -236,10 +236,10 @@ def getImage():
 
 if __name__ == "__main__":
     img = getImage()
-    show("RGB","Filtre RGB",img,1)
-    show("CMY","Filtre CMY",img,5)
-    show("GREY","Filtre Gris",img,4)
-    showImagefft(filterColor(img,4)) 
+    #show("RGB","Filtre RGB",img,1)
+    #show("CMY","Filtre CMY",img,5)
+    #show("GREY","Filtre Gris",img,4)
+    #showImagefft(filterColor(img,4)) 
     canny(img)
 
     plt.show()
