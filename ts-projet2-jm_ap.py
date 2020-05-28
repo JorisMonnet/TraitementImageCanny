@@ -180,6 +180,7 @@ def showCanny(img):
 
 """
 show a canny image with the cv2 library to compare
+work only with the testImage here
 """
 def cannyCV2():
     import cv2 as cv
