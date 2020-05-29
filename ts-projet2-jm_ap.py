@@ -116,11 +116,10 @@ or non relevant ( they don't contribute)
 """
 def threshold(img, lowThresholdRatio=0.05, highThresholdRatio=0.09):
     
-    highThreshold = img.max() * highThresholdRatio;
-    lowThreshold = highThreshold * lowThresholdRatio;
+    highThreshold = img.max() * highThresholdRatio
+    lowThreshold = highThreshold * lowThresholdRatio
     
-    M, N = img.shape
-    res = np.zeros((M,N), dtype=np.int32)
+    result = np.zeros((img.shape), dtype=np.int32)
     
     weak = np.int32(25)
     strong = np.int32(255)
@@ -130,10 +129,10 @@ def threshold(img, lowThresholdRatio=0.05, highThresholdRatio=0.09):
     
     weak_i, weak_j = np.where((img <= highThreshold) & (img >= lowThreshold))
     
-    res[strong_i, strong_j] = strong
-    res[weak_i, weak_j] = weak
+    result[strong_i, strong_j] = strong
+    result[weak_i, weak_j] = weak
     
-    return (res, weak, strong)
+    return (result, weak, strong)
 
 """
 allow weak pixels to become strong if there is others strong pixel near them
@@ -176,7 +175,8 @@ param = image source
 """
 def showCanny(img):
     plt.figure("Canny Edge Detector")
-    plt.imshow(canny(img), cmap='gray')
+    showSubPlot(211,img)
+    showSubPlot(212,canny(img),True)
 
 """
 show a canny image with the cv2 library to compare
@@ -230,8 +230,8 @@ matplotlib issue in imshow: https://github.com/matplotlib/matplotlib/issues/9391
 this function show the original image , the spectrum centered of the fast fourier transform,
 and then recreate the image from the spectrum
 """
-def showImagefft(img):
-    plt.figure("Fast Fourier Transform")
+def showImagefft(img,name="Fast Fourier Transform"):
+    plt.figure(name)
     fshift = np.fft.fftshift(np.fft.fft2((img * 255).astype(np.uint8))) #image is shifted to center
     newImage = np.abs(np.fft.ifft2(np.fft.ifftshift(fshift)))
     plt.subplot(131),plt.imshow(img,cmap="gray")
@@ -256,9 +256,12 @@ def show(title,suptitle,img,index):
 """
 remove axes on the subplot and show the image
 """
-def showSubPlot(index,img):
+def showSubPlot(index,img,cmapGray=False):
     plt.subplot(index)
-    a=plt.imshow(img)
+    if cmapGray:
+        a=plt.imshow(img,cmap="gray")
+    else:
+        a=plt.imshow(img)
     a.axes.get_xaxis().set_visible(False)
     a.axes.get_yaxis().set_visible(False)
 
@@ -292,13 +295,21 @@ def getImage():
 
     return np.asarray(rgb, dtype='uint8')
 
+"""
+it takes a long time to process all the filters for HD images
+"""
 if __name__ == "__main__":
-    #img = getImage()
-    #show("RGB","Filtre RGB",img,1)
-    #show("CMY","Filtre CMY",img,5)
-    #show("GREY","Filtre Gris",img,4)
-    #showImagefft(filterColor(img,4)) 
-    #showImagefft(canny(img)) #compare after canny
-    #showCanny(img)
+    img = getImage()
+    show("RGB","Filtre RGB",img,1)
+    show("CMY","Filtre CMY",img,5)
+    show("GREY","Filtre Gris",img,4)
+    showImagefft(filterColor(img,4)) 
+    showImagefft(canny(img),"FFT after canny") #compare after canny
+    showCanny(img)
     cannyCV2()
     plt.show()
+
+    """
+    sources : 
+    
+    """
