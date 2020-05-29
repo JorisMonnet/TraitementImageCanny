@@ -304,12 +304,12 @@ if __name__ == "__main__":
     show("CMY","Filtre CMY",img,5)
     show("GREY","Filtre Gris",img,4)
     showImagefft(filterColor(img,4)) 
-    showImagefft(canny(img),"FFT after canny") #compare after canny
+    showImagefft(canny(img),"FFT after canny") #compare after canny, change the name of the figure for each fft launched together
     showCanny(img)
     cannyCV2()
     plt.show()
 
     """
     sources : 
-    
+
     """
