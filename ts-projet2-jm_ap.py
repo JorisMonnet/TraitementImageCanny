@@ -310,7 +310,7 @@ if __name__ == "__main__":
     plt.show()
 
 """
-sources : 
+Sources : 
 Canny : https://towardsdatascience.com/canny-edge-detection-step-by-step-in-python-computer-vision-b49c3a2d8123
 fft : https://numpy.org/doc/stable/reference/generated/numpy.fft.fft2.html
 """
