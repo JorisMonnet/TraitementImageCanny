@@ -211,11 +211,7 @@ def filterColor(img,color):
     im = np.copy(img)
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
-            try :
-                r, g, b, dt = im[i, j]
-            except:
-                r,g,b = im[i,j]
-                dt=1
+            r, g, b, dt = im[i, j]
             if(color>4):
                 tab=[r*coef[0],g*coef[1],b*coef[2]]
                 tab.remove(0)
@@ -287,13 +283,13 @@ def getImage():
     If the image is only rgb, by adding the opacity, the blank around the images is used into the filtering of colors and 
     the other functionnalities of this project, try to avoid rgb images and prefer rgba to have a better view of the functionnalities
     """
-    rgb = np.zeros([row,col,4])
+    rgba = np.zeros([row,col,4])
     for i in range(row):
         for j in range(col):
             r,g,b = img[i,j]
-            rgb[i,j]=r,g,b,255
+            rgba[i,j]=r,g,b,255
 
-    return np.asarray(rgb, dtype='uint8')
+    return np.asarray(rgba, dtype='uint8')
 
 """
 it takes a long time to process all the filters for HD images
