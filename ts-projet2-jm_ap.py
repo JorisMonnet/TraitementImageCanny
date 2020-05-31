@@ -15,12 +15,6 @@ def gaussian_kernel(size, sigma=1):
     return  np.exp(-((x**2 + y**2) / (2.0*sigma**2))) * normal
 
 """
-return an image blured with a gaussain_kernel
-"""
-def gaussian_blur(image, kernel_size):
-    return convolution(image, gaussian_kernel(kernel_size))
-
-"""
 allow to convolve the gaussian kernel and an image to blur it
 """
 def convolution(image, kernel):
@@ -48,6 +42,12 @@ def convolution(image, kernel):
             output[row, col] = np.sum(kernel * padded_image[row:row + kernel_row, col:col + kernel_col])
 
     return output
+
+"""
+return an image blured with a gaussain kernel
+"""
+def gaussian_blur(image, kernel_size):
+    return convolution(image, gaussian_kernel(kernel_size))
 
 """
 detect the edge intensity and direction by calculating the gradient
@@ -110,9 +110,9 @@ def non_max_suppression(img, gradient_direction):
     return result
 
 """
-identify the pixel as strong(they contribute to edges) 
+identify the pixel as strong (they contribute to edges) 
 or weak (they maybe contribute) 
-or non relevant ( they don't contribute)
+or non relevant (they don't contribute)
 """
 def threshold(img, lowThresholdRatio=0.05, highThresholdRatio=0.09):
     
@@ -242,7 +242,7 @@ def showImagefft(img,name="Fast Fourier Transform"):
     plt.title('Reconstitued Image'), plt.xticks([]), plt.yticks([])
 
 """
-show a figure withe colorFiltered image
+show a figure with a colorFiltered image
 """
 def show(title,suptitle,img,index):
     plt.figure(title)
