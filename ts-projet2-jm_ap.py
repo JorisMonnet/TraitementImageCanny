@@ -269,7 +269,7 @@ def getImage():
     fileName = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
     root.destroy()
     img = mpimg.imread(fileName)
-    if img.dtype != np.uint8: # Si le résultat n'est pas un tableau d'entiers
+    if img.dtype != np.uint8: # if result is not an integer array
         img = (img * 255).astype(np.uint8)
     
     row, col, ch = img.shape
@@ -277,7 +277,7 @@ def getImage():
     if ch == 4: #image rgba
         return img
 
-    if ch != 3 :  #image non rgb ni rgba"
+    if ch != 3 :  #image not rgb or rgba"
         raise Exception("Bad Image Type")
     """
     If the image is only rgb, by adding the opacity, the blank around the images is used into the filtering of colors and 
