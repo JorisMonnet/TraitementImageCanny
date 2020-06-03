@@ -180,15 +180,14 @@ def showCanny(img):
 
 """
 show a canny image with the cv2 library to compare
-work only with the testImage here
 """
-def cannyCV2():
+def cannyCV2(fileName):
     import cv2 as cv
-    im = cv.imread('imgTest.png',0)
-    ret, thresh = cv.threshold(im, 245, 255, 0)
+    im = cv.imread(fileName,0)
+    ret, thresh = cv.threshold(im, 127, 255, cv.THRESH_BINARY) #change the 127 here if doesn't work good
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     plt.figure("Canny via cv2")
-    plt.imshow(cv.drawContours(im, contours, -1, (0,0,0), 1),cmap="gray")
+    plt.imshow(cv.drawContours(im, contours, -1, (0,0,0), 3),cmap="gray")
 
 """
 filter the colors of an image and return the result
@@ -262,12 +261,19 @@ def showSubPlot(index,img,cmapGray=False):
     a.axes.get_yaxis().set_visible(False)
 
 """
-open an image from a filedialog at the rgba format
+find the file name of the image form a file dialog
 """
-def getImage():
+def getFileName():
     root = Tk()
     fileName = filedialog.askopenfilename(initialdir = "/",title = "Select file",filetypes = (("png files","*.png"),("all files","*.*")))
     root.destroy()
+    return fileName
+
+"""
+open an image from a filedialog at the rgba format
+"""
+def getImage(fileName):
+    
     img = mpimg.imread(fileName)
     if img.dtype != np.uint8: # if result is not an integer array
         img = (img * 255).astype(np.uint8)
@@ -295,14 +301,15 @@ def getImage():
 it takes a long time to process all the filters for HD images
 """
 if __name__ == "__main__":
-    img = getImage()
+    fileName = getFileName()
+    img = getImage(fileName)
     show("RGB","Filtre RGB",img,1)
     show("CMY","Filtre CMY",img,5)
     show("GREY","Filtre Gris",img,4)
     showImagefft(img) 
     showImagefft(canny(img),"FFT after canny") #compare after canny, change the name of the figure for each fft launched together
     showCanny(img)
-    cannyCV2()
+    cannyCV2(fileName)  #if it not work really good on your image, try to change min value in treshold function
     plt.show()
 
 """
