@@ -230,11 +230,11 @@ def showImagefft(img,name="Fast Fourier Transform"):
     plt.figure(name)
     fshift = np.fft.fftshift(np.fft.fft2((img * 255).astype(np.uint8))) #image is shifted to center
     newImage = np.abs(np.fft.ifft2(np.fft.ifftshift(fshift)))
-    plt.subplot(131),plt.imshow(img,cmap="gray")
+    plt.subplot(131),plt.imshow(img)
     plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-    plt.subplot(132),plt.imshow((np.abs(fshift) * 255).astype(np.uint8),cmap="gray")
+    plt.subplot(132),plt.imshow((np.abs(fshift) * 255).astype(np.uint8))
     plt.title('Spectrum via FFT'), plt.xticks([]), plt.yticks([])
-    plt.subplot(133),plt.imshow((newImage * 255).astype(np.uint8),cmap="gray")
+    plt.subplot(133),plt.imshow((newImage * 255).astype(np.uint8))
     plt.title('Reconstitued Image'), plt.xticks([]), plt.yticks([])
 
 """
@@ -299,7 +299,7 @@ if __name__ == "__main__":
     show("RGB","Filtre RGB",img,1)
     show("CMY","Filtre CMY",img,5)
     show("GREY","Filtre Gris",img,4)
-    showImagefft(filterColor(img,4)) 
+    showImagefft(img) 
     showImagefft(canny(img),"FFT after canny") #compare after canny, change the name of the figure for each fft launched together
     showCanny(img)
     cannyCV2()
